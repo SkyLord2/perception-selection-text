@@ -70,13 +70,13 @@ function requireNative() {
   } else if (process.platform === 'android') {
     if (process.arch === 'arm64') {
       try {
-        return require('./package-template.android-arm64.node')
+        return require('./perception-selection-text.android-arm64.node')
       } catch (e) {
         loadErrors.push(e)
       }
       try {
-        const binding = require('@napi-rs/package-template-android-arm64')
-        const bindingPackageVersion = require('@napi-rs/package-template-android-arm64/package.json').version
+        const binding = require('@aiui/perception-selection-text-android-arm64')
+        const bindingPackageVersion = require('@aiui/perception-selection-text-android-arm64/package.json').version
         if (bindingPackageVersion !== '1.0.0' && process.env.NAPI_RS_ENFORCE_VERSION_CHECK && process.env.NAPI_RS_ENFORCE_VERSION_CHECK !== '0') {
           throw new Error(`Native binding package version mismatch, expected 1.0.0 but got ${bindingPackageVersion}. You can reinstall dependencies to fix this issue.`)
         }
@@ -86,13 +86,13 @@ function requireNative() {
       }
     } else if (process.arch === 'arm') {
       try {
-        return require('./package-template.android-arm-eabi.node')
+        return require('./perception-selection-text.android-arm-eabi.node')
       } catch (e) {
         loadErrors.push(e)
       }
       try {
-        const binding = require('@napi-rs/package-template-android-arm-eabi')
-        const bindingPackageVersion = require('@napi-rs/package-template-android-arm-eabi/package.json').version
+        const binding = require('@aiui/perception-selection-text-android-arm-eabi')
+        const bindingPackageVersion = require('@aiui/perception-selection-text-android-arm-eabi/package.json').version
         if (bindingPackageVersion !== '1.0.0' && process.env.NAPI_RS_ENFORCE_VERSION_CHECK && process.env.NAPI_RS_ENFORCE_VERSION_CHECK !== '0') {
           throw new Error(`Native binding package version mismatch, expected 1.0.0 but got ${bindingPackageVersion}. You can reinstall dependencies to fix this issue.`)
         }
@@ -107,13 +107,13 @@ function requireNative() {
     if (process.arch === 'x64') {
       if (process.config?.variables?.shlib_suffix === 'dll.a' || process.config?.variables?.node_target_type === 'shared_library') {
         try {
-        return require('./package-template.win32-x64-gnu.node')
+        return require('./perception-selection-text.win32-x64-gnu.node')
       } catch (e) {
         loadErrors.push(e)
       }
       try {
-        const binding = require('@napi-rs/package-template-win32-x64-gnu')
-        const bindingPackageVersion = require('@napi-rs/package-template-win32-x64-gnu/package.json').version
+        const binding = require('@aiui/perception-selection-text-win32-x64-gnu')
+        const bindingPackageVersion = require('@aiui/perception-selection-text-win32-x64-gnu/package.json').version
         if (bindingPackageVersion !== '1.0.0' && process.env.NAPI_RS_ENFORCE_VERSION_CHECK && process.env.NAPI_RS_ENFORCE_VERSION_CHECK !== '0') {
           throw new Error(`Native binding package version mismatch, expected 1.0.0 but got ${bindingPackageVersion}. You can reinstall dependencies to fix this issue.`)
         }
@@ -123,13 +123,13 @@ function requireNative() {
       }
       } else {
         try {
-        return require('./package-template.win32-x64-msvc.node')
+        return require('./perception-selection-text.win32-x64-msvc.node')
       } catch (e) {
         loadErrors.push(e)
       }
       try {
-        const binding = require('@napi-rs/package-template-win32-x64-msvc')
-        const bindingPackageVersion = require('@napi-rs/package-template-win32-x64-msvc/package.json').version
+        const binding = require('@aiui/perception-selection-text-win32-x64-msvc')
+        const bindingPackageVersion = require('@aiui/perception-selection-text-win32-x64-msvc/package.json').version
         if (bindingPackageVersion !== '1.0.0' && process.env.NAPI_RS_ENFORCE_VERSION_CHECK && process.env.NAPI_RS_ENFORCE_VERSION_CHECK !== '0') {
           throw new Error(`Native binding package version mismatch, expected 1.0.0 but got ${bindingPackageVersion}. You can reinstall dependencies to fix this issue.`)
         }
@@ -140,13 +140,13 @@ function requireNative() {
       }
     } else if (process.arch === 'ia32') {
       try {
-        return require('./package-template.win32-ia32-msvc.node')
+        return require('./perception-selection-text.win32-ia32-msvc.node')
       } catch (e) {
         loadErrors.push(e)
       }
       try {
-        const binding = require('@napi-rs/package-template-win32-ia32-msvc')
-        const bindingPackageVersion = require('@napi-rs/package-template-win32-ia32-msvc/package.json').version
+        const binding = require('@aiui/perception-selection-text-win32-ia32-msvc')
+        const bindingPackageVersion = require('@aiui/perception-selection-text-win32-ia32-msvc/package.json').version
         if (bindingPackageVersion !== '1.0.0' && process.env.NAPI_RS_ENFORCE_VERSION_CHECK && process.env.NAPI_RS_ENFORCE_VERSION_CHECK !== '0') {
           throw new Error(`Native binding package version mismatch, expected 1.0.0 but got ${bindingPackageVersion}. You can reinstall dependencies to fix this issue.`)
         }
@@ -156,13 +156,13 @@ function requireNative() {
       }
     } else if (process.arch === 'arm64') {
       try {
-        return require('./package-template.win32-arm64-msvc.node')
+        return require('./perception-selection-text.win32-arm64-msvc.node')
       } catch (e) {
         loadErrors.push(e)
       }
       try {
-        const binding = require('@napi-rs/package-template-win32-arm64-msvc')
-        const bindingPackageVersion = require('@napi-rs/package-template-win32-arm64-msvc/package.json').version
+        const binding = require('@aiui/perception-selection-text-win32-arm64-msvc')
+        const bindingPackageVersion = require('@aiui/perception-selection-text-win32-arm64-msvc/package.json').version
         if (bindingPackageVersion !== '1.0.0' && process.env.NAPI_RS_ENFORCE_VERSION_CHECK && process.env.NAPI_RS_ENFORCE_VERSION_CHECK !== '0') {
           throw new Error(`Native binding package version mismatch, expected 1.0.0 but got ${bindingPackageVersion}. You can reinstall dependencies to fix this issue.`)
         }
@@ -175,13 +175,13 @@ function requireNative() {
     }
   } else if (process.platform === 'darwin') {
     try {
-      return require('./package-template.darwin-universal.node')
+      return require('./perception-selection-text.darwin-universal.node')
     } catch (e) {
       loadErrors.push(e)
     }
     try {
-      const binding = require('@napi-rs/package-template-darwin-universal')
-      const bindingPackageVersion = require('@napi-rs/package-template-darwin-universal/package.json').version
+      const binding = require('@aiui/perception-selection-text-darwin-universal')
+      const bindingPackageVersion = require('@aiui/perception-selection-text-darwin-universal/package.json').version
       if (bindingPackageVersion !== '1.0.0' && process.env.NAPI_RS_ENFORCE_VERSION_CHECK && process.env.NAPI_RS_ENFORCE_VERSION_CHECK !== '0') {
         throw new Error(`Native binding package version mismatch, expected 1.0.0 but got ${bindingPackageVersion}. You can reinstall dependencies to fix this issue.`)
       }
@@ -191,13 +191,13 @@ function requireNative() {
     }
     if (process.arch === 'x64') {
       try {
-        return require('./package-template.darwin-x64.node')
+        return require('./perception-selection-text.darwin-x64.node')
       } catch (e) {
         loadErrors.push(e)
       }
       try {
-        const binding = require('@napi-rs/package-template-darwin-x64')
-        const bindingPackageVersion = require('@napi-rs/package-template-darwin-x64/package.json').version
+        const binding = require('@aiui/perception-selection-text-darwin-x64')
+        const bindingPackageVersion = require('@aiui/perception-selection-text-darwin-x64/package.json').version
         if (bindingPackageVersion !== '1.0.0' && process.env.NAPI_RS_ENFORCE_VERSION_CHECK && process.env.NAPI_RS_ENFORCE_VERSION_CHECK !== '0') {
           throw new Error(`Native binding package version mismatch, expected 1.0.0 but got ${bindingPackageVersion}. You can reinstall dependencies to fix this issue.`)
         }
@@ -207,13 +207,13 @@ function requireNative() {
       }
     } else if (process.arch === 'arm64') {
       try {
-        return require('./package-template.darwin-arm64.node')
+        return require('./perception-selection-text.darwin-arm64.node')
       } catch (e) {
         loadErrors.push(e)
       }
       try {
-        const binding = require('@napi-rs/package-template-darwin-arm64')
-        const bindingPackageVersion = require('@napi-rs/package-template-darwin-arm64/package.json').version
+        const binding = require('@aiui/perception-selection-text-darwin-arm64')
+        const bindingPackageVersion = require('@aiui/perception-selection-text-darwin-arm64/package.json').version
         if (bindingPackageVersion !== '1.0.0' && process.env.NAPI_RS_ENFORCE_VERSION_CHECK && process.env.NAPI_RS_ENFORCE_VERSION_CHECK !== '0') {
           throw new Error(`Native binding package version mismatch, expected 1.0.0 but got ${bindingPackageVersion}. You can reinstall dependencies to fix this issue.`)
         }
@@ -227,13 +227,13 @@ function requireNative() {
   } else if (process.platform === 'freebsd') {
     if (process.arch === 'x64') {
       try {
-        return require('./package-template.freebsd-x64.node')
+        return require('./perception-selection-text.freebsd-x64.node')
       } catch (e) {
         loadErrors.push(e)
       }
       try {
-        const binding = require('@napi-rs/package-template-freebsd-x64')
-        const bindingPackageVersion = require('@napi-rs/package-template-freebsd-x64/package.json').version
+        const binding = require('@aiui/perception-selection-text-freebsd-x64')
+        const bindingPackageVersion = require('@aiui/perception-selection-text-freebsd-x64/package.json').version
         if (bindingPackageVersion !== '1.0.0' && process.env.NAPI_RS_ENFORCE_VERSION_CHECK && process.env.NAPI_RS_ENFORCE_VERSION_CHECK !== '0') {
           throw new Error(`Native binding package version mismatch, expected 1.0.0 but got ${bindingPackageVersion}. You can reinstall dependencies to fix this issue.`)
         }
@@ -243,13 +243,13 @@ function requireNative() {
       }
     } else if (process.arch === 'arm64') {
       try {
-        return require('./package-template.freebsd-arm64.node')
+        return require('./perception-selection-text.freebsd-arm64.node')
       } catch (e) {
         loadErrors.push(e)
       }
       try {
-        const binding = require('@napi-rs/package-template-freebsd-arm64')
-        const bindingPackageVersion = require('@napi-rs/package-template-freebsd-arm64/package.json').version
+        const binding = require('@aiui/perception-selection-text-freebsd-arm64')
+        const bindingPackageVersion = require('@aiui/perception-selection-text-freebsd-arm64/package.json').version
         if (bindingPackageVersion !== '1.0.0' && process.env.NAPI_RS_ENFORCE_VERSION_CHECK && process.env.NAPI_RS_ENFORCE_VERSION_CHECK !== '0') {
           throw new Error(`Native binding package version mismatch, expected 1.0.0 but got ${bindingPackageVersion}. You can reinstall dependencies to fix this issue.`)
         }
@@ -264,13 +264,13 @@ function requireNative() {
     if (process.arch === 'x64') {
       if (isMusl()) {
         try {
-          return require('./package-template.linux-x64-musl.node')
+          return require('./perception-selection-text.linux-x64-musl.node')
         } catch (e) {
           loadErrors.push(e)
         }
         try {
-          const binding = require('@napi-rs/package-template-linux-x64-musl')
-          const bindingPackageVersion = require('@napi-rs/package-template-linux-x64-musl/package.json').version
+          const binding = require('@aiui/perception-selection-text-linux-x64-musl')
+          const bindingPackageVersion = require('@aiui/perception-selection-text-linux-x64-musl/package.json').version
           if (bindingPackageVersion !== '1.0.0' && process.env.NAPI_RS_ENFORCE_VERSION_CHECK && process.env.NAPI_RS_ENFORCE_VERSION_CHECK !== '0') {
             throw new Error(`Native binding package version mismatch, expected 1.0.0 but got ${bindingPackageVersion}. You can reinstall dependencies to fix this issue.`)
           }
@@ -280,13 +280,13 @@ function requireNative() {
         }
       } else {
         try {
-          return require('./package-template.linux-x64-gnu.node')
+          return require('./perception-selection-text.linux-x64-gnu.node')
         } catch (e) {
           loadErrors.push(e)
         }
         try {
-          const binding = require('@napi-rs/package-template-linux-x64-gnu')
-          const bindingPackageVersion = require('@napi-rs/package-template-linux-x64-gnu/package.json').version
+          const binding = require('@aiui/perception-selection-text-linux-x64-gnu')
+          const bindingPackageVersion = require('@aiui/perception-selection-text-linux-x64-gnu/package.json').version
           if (bindingPackageVersion !== '1.0.0' && process.env.NAPI_RS_ENFORCE_VERSION_CHECK && process.env.NAPI_RS_ENFORCE_VERSION_CHECK !== '0') {
             throw new Error(`Native binding package version mismatch, expected 1.0.0 but got ${bindingPackageVersion}. You can reinstall dependencies to fix this issue.`)
           }
@@ -298,13 +298,13 @@ function requireNative() {
     } else if (process.arch === 'arm64') {
       if (isMusl()) {
         try {
-          return require('./package-template.linux-arm64-musl.node')
+          return require('./perception-selection-text.linux-arm64-musl.node')
         } catch (e) {
           loadErrors.push(e)
         }
         try {
-          const binding = require('@napi-rs/package-template-linux-arm64-musl')
-          const bindingPackageVersion = require('@napi-rs/package-template-linux-arm64-musl/package.json').version
+          const binding = require('@aiui/perception-selection-text-linux-arm64-musl')
+          const bindingPackageVersion = require('@aiui/perception-selection-text-linux-arm64-musl/package.json').version
           if (bindingPackageVersion !== '1.0.0' && process.env.NAPI_RS_ENFORCE_VERSION_CHECK && process.env.NAPI_RS_ENFORCE_VERSION_CHECK !== '0') {
             throw new Error(`Native binding package version mismatch, expected 1.0.0 but got ${bindingPackageVersion}. You can reinstall dependencies to fix this issue.`)
           }
@@ -314,13 +314,13 @@ function requireNative() {
         }
       } else {
         try {
-          return require('./package-template.linux-arm64-gnu.node')
+          return require('./perception-selection-text.linux-arm64-gnu.node')
         } catch (e) {
           loadErrors.push(e)
         }
         try {
-          const binding = require('@napi-rs/package-template-linux-arm64-gnu')
-          const bindingPackageVersion = require('@napi-rs/package-template-linux-arm64-gnu/package.json').version
+          const binding = require('@aiui/perception-selection-text-linux-arm64-gnu')
+          const bindingPackageVersion = require('@aiui/perception-selection-text-linux-arm64-gnu/package.json').version
           if (bindingPackageVersion !== '1.0.0' && process.env.NAPI_RS_ENFORCE_VERSION_CHECK && process.env.NAPI_RS_ENFORCE_VERSION_CHECK !== '0') {
             throw new Error(`Native binding package version mismatch, expected 1.0.0 but got ${bindingPackageVersion}. You can reinstall dependencies to fix this issue.`)
           }
@@ -332,13 +332,13 @@ function requireNative() {
     } else if (process.arch === 'arm') {
       if (isMusl()) {
         try {
-          return require('./package-template.linux-arm-musleabihf.node')
+          return require('./perception-selection-text.linux-arm-musleabihf.node')
         } catch (e) {
           loadErrors.push(e)
         }
         try {
-          const binding = require('@napi-rs/package-template-linux-arm-musleabihf')
-          const bindingPackageVersion = require('@napi-rs/package-template-linux-arm-musleabihf/package.json').version
+          const binding = require('@aiui/perception-selection-text-linux-arm-musleabihf')
+          const bindingPackageVersion = require('@aiui/perception-selection-text-linux-arm-musleabihf/package.json').version
           if (bindingPackageVersion !== '1.0.0' && process.env.NAPI_RS_ENFORCE_VERSION_CHECK && process.env.NAPI_RS_ENFORCE_VERSION_CHECK !== '0') {
             throw new Error(`Native binding package version mismatch, expected 1.0.0 but got ${bindingPackageVersion}. You can reinstall dependencies to fix this issue.`)
           }
@@ -348,13 +348,13 @@ function requireNative() {
         }
       } else {
         try {
-          return require('./package-template.linux-arm-gnueabihf.node')
+          return require('./perception-selection-text.linux-arm-gnueabihf.node')
         } catch (e) {
           loadErrors.push(e)
         }
         try {
-          const binding = require('@napi-rs/package-template-linux-arm-gnueabihf')
-          const bindingPackageVersion = require('@napi-rs/package-template-linux-arm-gnueabihf/package.json').version
+          const binding = require('@aiui/perception-selection-text-linux-arm-gnueabihf')
+          const bindingPackageVersion = require('@aiui/perception-selection-text-linux-arm-gnueabihf/package.json').version
           if (bindingPackageVersion !== '1.0.0' && process.env.NAPI_RS_ENFORCE_VERSION_CHECK && process.env.NAPI_RS_ENFORCE_VERSION_CHECK !== '0') {
             throw new Error(`Native binding package version mismatch, expected 1.0.0 but got ${bindingPackageVersion}. You can reinstall dependencies to fix this issue.`)
           }
@@ -366,13 +366,13 @@ function requireNative() {
     } else if (process.arch === 'loong64') {
       if (isMusl()) {
         try {
-          return require('./package-template.linux-loong64-musl.node')
+          return require('./perception-selection-text.linux-loong64-musl.node')
         } catch (e) {
           loadErrors.push(e)
         }
         try {
-          const binding = require('@napi-rs/package-template-linux-loong64-musl')
-          const bindingPackageVersion = require('@napi-rs/package-template-linux-loong64-musl/package.json').version
+          const binding = require('@aiui/perception-selection-text-linux-loong64-musl')
+          const bindingPackageVersion = require('@aiui/perception-selection-text-linux-loong64-musl/package.json').version
           if (bindingPackageVersion !== '1.0.0' && process.env.NAPI_RS_ENFORCE_VERSION_CHECK && process.env.NAPI_RS_ENFORCE_VERSION_CHECK !== '0') {
             throw new Error(`Native binding package version mismatch, expected 1.0.0 but got ${bindingPackageVersion}. You can reinstall dependencies to fix this issue.`)
           }
@@ -382,13 +382,13 @@ function requireNative() {
         }
       } else {
         try {
-          return require('./package-template.linux-loong64-gnu.node')
+          return require('./perception-selection-text.linux-loong64-gnu.node')
         } catch (e) {
           loadErrors.push(e)
         }
         try {
-          const binding = require('@napi-rs/package-template-linux-loong64-gnu')
-          const bindingPackageVersion = require('@napi-rs/package-template-linux-loong64-gnu/package.json').version
+          const binding = require('@aiui/perception-selection-text-linux-loong64-gnu')
+          const bindingPackageVersion = require('@aiui/perception-selection-text-linux-loong64-gnu/package.json').version
           if (bindingPackageVersion !== '1.0.0' && process.env.NAPI_RS_ENFORCE_VERSION_CHECK && process.env.NAPI_RS_ENFORCE_VERSION_CHECK !== '0') {
             throw new Error(`Native binding package version mismatch, expected 1.0.0 but got ${bindingPackageVersion}. You can reinstall dependencies to fix this issue.`)
           }
@@ -400,13 +400,13 @@ function requireNative() {
     } else if (process.arch === 'riscv64') {
       if (isMusl()) {
         try {
-          return require('./package-template.linux-riscv64-musl.node')
+          return require('./perception-selection-text.linux-riscv64-musl.node')
         } catch (e) {
           loadErrors.push(e)
         }
         try {
-          const binding = require('@napi-rs/package-template-linux-riscv64-musl')
-          const bindingPackageVersion = require('@napi-rs/package-template-linux-riscv64-musl/package.json').version
+          const binding = require('@aiui/perception-selection-text-linux-riscv64-musl')
+          const bindingPackageVersion = require('@aiui/perception-selection-text-linux-riscv64-musl/package.json').version
           if (bindingPackageVersion !== '1.0.0' && process.env.NAPI_RS_ENFORCE_VERSION_CHECK && process.env.NAPI_RS_ENFORCE_VERSION_CHECK !== '0') {
             throw new Error(`Native binding package version mismatch, expected 1.0.0 but got ${bindingPackageVersion}. You can reinstall dependencies to fix this issue.`)
           }
@@ -416,13 +416,13 @@ function requireNative() {
         }
       } else {
         try {
-          return require('./package-template.linux-riscv64-gnu.node')
+          return require('./perception-selection-text.linux-riscv64-gnu.node')
         } catch (e) {
           loadErrors.push(e)
         }
         try {
-          const binding = require('@napi-rs/package-template-linux-riscv64-gnu')
-          const bindingPackageVersion = require('@napi-rs/package-template-linux-riscv64-gnu/package.json').version
+          const binding = require('@aiui/perception-selection-text-linux-riscv64-gnu')
+          const bindingPackageVersion = require('@aiui/perception-selection-text-linux-riscv64-gnu/package.json').version
           if (bindingPackageVersion !== '1.0.0' && process.env.NAPI_RS_ENFORCE_VERSION_CHECK && process.env.NAPI_RS_ENFORCE_VERSION_CHECK !== '0') {
             throw new Error(`Native binding package version mismatch, expected 1.0.0 but got ${bindingPackageVersion}. You can reinstall dependencies to fix this issue.`)
           }
@@ -433,13 +433,13 @@ function requireNative() {
       }
     } else if (process.arch === 'ppc64') {
       try {
-        return require('./package-template.linux-ppc64-gnu.node')
+        return require('./perception-selection-text.linux-ppc64-gnu.node')
       } catch (e) {
         loadErrors.push(e)
       }
       try {
-        const binding = require('@napi-rs/package-template-linux-ppc64-gnu')
-        const bindingPackageVersion = require('@napi-rs/package-template-linux-ppc64-gnu/package.json').version
+        const binding = require('@aiui/perception-selection-text-linux-ppc64-gnu')
+        const bindingPackageVersion = require('@aiui/perception-selection-text-linux-ppc64-gnu/package.json').version
         if (bindingPackageVersion !== '1.0.0' && process.env.NAPI_RS_ENFORCE_VERSION_CHECK && process.env.NAPI_RS_ENFORCE_VERSION_CHECK !== '0') {
           throw new Error(`Native binding package version mismatch, expected 1.0.0 but got ${bindingPackageVersion}. You can reinstall dependencies to fix this issue.`)
         }
@@ -449,13 +449,13 @@ function requireNative() {
       }
     } else if (process.arch === 's390x') {
       try {
-        return require('./package-template.linux-s390x-gnu.node')
+        return require('./perception-selection-text.linux-s390x-gnu.node')
       } catch (e) {
         loadErrors.push(e)
       }
       try {
-        const binding = require('@napi-rs/package-template-linux-s390x-gnu')
-        const bindingPackageVersion = require('@napi-rs/package-template-linux-s390x-gnu/package.json').version
+        const binding = require('@aiui/perception-selection-text-linux-s390x-gnu')
+        const bindingPackageVersion = require('@aiui/perception-selection-text-linux-s390x-gnu/package.json').version
         if (bindingPackageVersion !== '1.0.0' && process.env.NAPI_RS_ENFORCE_VERSION_CHECK && process.env.NAPI_RS_ENFORCE_VERSION_CHECK !== '0') {
           throw new Error(`Native binding package version mismatch, expected 1.0.0 but got ${bindingPackageVersion}. You can reinstall dependencies to fix this issue.`)
         }
@@ -469,13 +469,13 @@ function requireNative() {
   } else if (process.platform === 'openharmony') {
     if (process.arch === 'arm64') {
       try {
-        return require('./package-template.openharmony-arm64.node')
+        return require('./perception-selection-text.openharmony-arm64.node')
       } catch (e) {
         loadErrors.push(e)
       }
       try {
-        const binding = require('@napi-rs/package-template-openharmony-arm64')
-        const bindingPackageVersion = require('@napi-rs/package-template-openharmony-arm64/package.json').version
+        const binding = require('@aiui/perception-selection-text-openharmony-arm64')
+        const bindingPackageVersion = require('@aiui/perception-selection-text-openharmony-arm64/package.json').version
         if (bindingPackageVersion !== '1.0.0' && process.env.NAPI_RS_ENFORCE_VERSION_CHECK && process.env.NAPI_RS_ENFORCE_VERSION_CHECK !== '0') {
           throw new Error(`Native binding package version mismatch, expected 1.0.0 but got ${bindingPackageVersion}. You can reinstall dependencies to fix this issue.`)
         }
@@ -485,13 +485,13 @@ function requireNative() {
       }
     } else if (process.arch === 'x64') {
       try {
-        return require('./package-template.openharmony-x64.node')
+        return require('./perception-selection-text.openharmony-x64.node')
       } catch (e) {
         loadErrors.push(e)
       }
       try {
-        const binding = require('@napi-rs/package-template-openharmony-x64')
-        const bindingPackageVersion = require('@napi-rs/package-template-openharmony-x64/package.json').version
+        const binding = require('@aiui/perception-selection-text-openharmony-x64')
+        const bindingPackageVersion = require('@aiui/perception-selection-text-openharmony-x64/package.json').version
         if (bindingPackageVersion !== '1.0.0' && process.env.NAPI_RS_ENFORCE_VERSION_CHECK && process.env.NAPI_RS_ENFORCE_VERSION_CHECK !== '0') {
           throw new Error(`Native binding package version mismatch, expected 1.0.0 but got ${bindingPackageVersion}. You can reinstall dependencies to fix this issue.`)
         }
@@ -501,13 +501,13 @@ function requireNative() {
       }
     } else if (process.arch === 'arm') {
       try {
-        return require('./package-template.openharmony-arm.node')
+        return require('./perception-selection-text.openharmony-arm.node')
       } catch (e) {
         loadErrors.push(e)
       }
       try {
-        const binding = require('@napi-rs/package-template-openharmony-arm')
-        const bindingPackageVersion = require('@napi-rs/package-template-openharmony-arm/package.json').version
+        const binding = require('@aiui/perception-selection-text-openharmony-arm')
+        const bindingPackageVersion = require('@aiui/perception-selection-text-openharmony-arm/package.json').version
         if (bindingPackageVersion !== '1.0.0' && process.env.NAPI_RS_ENFORCE_VERSION_CHECK && process.env.NAPI_RS_ENFORCE_VERSION_CHECK !== '0') {
           throw new Error(`Native binding package version mismatch, expected 1.0.0 but got ${bindingPackageVersion}. You can reinstall dependencies to fix this issue.`)
         }
@@ -529,7 +529,7 @@ if (!nativeBinding || process.env.NAPI_RS_FORCE_WASI) {
   let wasiBinding = null
   let wasiBindingError = null
   try {
-    wasiBinding = require('./package-template.wasi.cjs')
+    wasiBinding = require('./perception-selection-text.wasi.cjs')
     nativeBinding = wasiBinding
   } catch (err) {
     if (process.env.NAPI_RS_FORCE_WASI) {
@@ -538,7 +538,7 @@ if (!nativeBinding || process.env.NAPI_RS_FORCE_WASI) {
   }
   if (!nativeBinding || process.env.NAPI_RS_FORCE_WASI) {
     try {
-      wasiBinding = require('@napi-rs/package-template-wasm32-wasi')
+      wasiBinding = require('@aiui/perception-selection-text-wasm32-wasi')
       nativeBinding = wasiBinding
     } catch (err) {
       if (process.env.NAPI_RS_FORCE_WASI) {
