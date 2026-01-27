@@ -2,24 +2,38 @@
 [package]
 authors = ["LongYinan <lynweklm@gmail.com>"]
 edition = "2024"
-name = "perception_selection_text"
+name    = "perception_selection_text"
 version = "0.1.0"
 
 [lib]
 crate-type = ["cdylib"]
 
 [dependencies]
-chrono = "0.4"
-napi = "3.0.0"
+chrono      = "0.4"
+napi        = "3.0.0"
 napi-derive = "3.0.0"
 
-[dependencies.windows]
-version = "0.62.2"
-features = ["Win32_Foundation","Win32_System_Threading","Win32_UI_WindowsAndMessaging"]
+  [dependencies.windows]
+  features = [
+    "Win32_Foundation",
+    "Win32_System_Com",
+    "Win32_System_Threading",
+    "Win32_UI_Accessibility",
+    "Win32_UI_WindowsAndMessaging",
+    "Win32_UI_Input_KeyboardAndMouse",
+    "Win32_UI_Controls",
+    "Win32_Graphics_Gdi",
+    "Win32_System_LibraryLoader",      #用于获取模块句柄
+    "Win32_System_DataExchange",
+    "Win32_System_Memory",
+    "Win32_System_Ole",
+    "Win32_System_Variant",
+  ]
+  version = "0.62.2"
 
 [build-dependencies]
 napi-build = "2"
 
 [profile.release]
-lto = true
+lto   = true
 strip = "symbols"
