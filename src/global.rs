@@ -38,7 +38,6 @@ pub static MONITOR_THREAD_ID: AtomicU32 = AtomicU32::new(0);
 pub const SELECTION_THRESHOLD_MS: u64 = 200;
 pub const DRAG_THRESHOLD_PX: i32 = 4;
 pub const CF_UNICODETEXT_U32: u32 = 13;
-pub const CHERRY_WND_TOP_HEIGHT: i32 = 110;
 
 pub enum TriggerEvent {
     Drag(u64),

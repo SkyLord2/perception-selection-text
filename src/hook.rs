@@ -2,19 +2,16 @@ use std::sync::{OnceLock, mpsc};
 use std::thread;
 use std::time::{Duration, Instant, SystemTime, UNIX_EPOCH};
 
-use windows::Win32::Foundation::{HWND, LPARAM, LRESULT, POINT, RECT, WPARAM};
+use windows::Win32::Foundation::{LPARAM, LRESULT, WPARAM};
 use windows::Win32::UI::Input::KeyboardAndMouse::GetDoubleClickTime;
 use windows::Win32::UI::WindowsAndMessaging::{
-    CURSORINFO, CallNextHookEx, GA_ROOT, GetAncestor, GetCursorInfo, GetSystemMetrics,
-    GetWindowRect, GetWindowTextLengthW, GetWindowTextW, HHOOK, HTBOTTOM, HTBOTTOMLEFT,
-    HTBOTTOMRIGHT, HTCAPTION, HTHSCROLL, HTLEFT, HTRIGHT, HTTOP, HTTOPLEFT, HTTOPRIGHT, HTVSCROLL,
-    IDC_SIZENESW, IDC_SIZENS, IDC_SIZENWSE, IDC_SIZEWE, LoadCursorW, MSLLHOOKSTRUCT,
-    SM_CXDOUBLECLK, SM_CXPADDEDBORDER, SM_CYCAPTION, SM_CYDOUBLECLK, SM_CYFRAME, SendMessageW,
-    WM_LBUTTONDOWN, WM_LBUTTONUP, WM_MOUSEMOVE, WM_NCHITTEST, WindowFromPoint,
+    CURSORINFO, CallNextHookEx, GetCursorInfo, GetSystemMetrics,
+    HHOOK, IDC_IBEAM, LoadCursorW, MSLLHOOKSTRUCT,
+    SM_CXDOUBLECLK, SM_CYDOUBLECLK, WM_LBUTTONDOWN, WM_LBUTTONUP, WM_MOUSEMOVE,
 };
 
 use crate::global::{
-    CHERRY_WND_TOP_HEIGHT, CLICK_UP_COUNT, DRAG_THRESHOLD_PX, HOOK_HANDLE, LAST_CLICK_UP_TIME,
+    CLICK_UP_COUNT, DRAG_THRESHOLD_PX, HOOK_HANDLE, LAST_CLICK_UP_TIME,
     LAST_CLICK_UP_X, LAST_CLICK_UP_Y, MOUSE_DOWN_TIME, MOUSE_DOWN_X, MOUSE_DOWN_Y, MOUSE_LAST_X,
     MOUSE_LAST_Y, NONCLIENT_MOUSE_DOWN, SELECTION_THRESHOLD_MS, TriggerEvent, WORKER_TX,
 };
@@ -98,67 +95,19 @@ fn debounce_loop(rx: mpsc::Receiver<DebounceMsg>) {
     }
 }
 
-fn is_title_bar_hit(pt: POINT) -> bool {
-    unsafe {
-        let hwnd = WindowFromPoint(pt);
-        if hwnd.0.is_null() {
-            return false;
-        }
-        let lparam_val = ((pt.y as u32 & 0xFFFF) << 16) | (pt.x as u32 & 0xFFFF);
-        let hit = SendMessageW(
-            hwnd,
-            WM_NCHITTEST,
-            Some(WPARAM(0)),
-            Some(LPARAM(lparam_val as isize)),
-        );
-        hit.0 == HTCAPTION as isize
-    }
-}
-
-fn is_resize_border_hit(pt: POINT) -> bool {
-    unsafe {
-        let hwnd = WindowFromPoint(pt);
-        if hwnd.0.is_null() {
-            return false;
-        }
-        let lparam_val = ((pt.y as u32 & 0xFFFF) << 16) | (pt.x as u32 & 0xFFFF);
-        let hit = SendMessageW(
-            hwnd,
-            WM_NCHITTEST,
-            Some(WPARAM(0)),
-            Some(LPARAM(lparam_val as isize)),
-        );
-        let code = hit.0 as i32;
-        code == HTLEFT as i32
-            || code == HTRIGHT as i32
-            || code == HTTOP as i32
-            || code == HTBOTTOM as i32
-            || code == HTTOPLEFT as i32
-            || code == HTTOPRIGHT as i32
-            || code == HTBOTTOMLEFT as i32
-            || code == HTBOTTOMRIGHT as i32
-    }
-}
-
-fn is_scrollbar_hit(pt: POINT) -> bool {
-    unsafe {
-        let hwnd = WindowFromPoint(pt);
-        if hwnd.0.is_null() {
-            return false;
-        }
-        let lparam_val = ((pt.y as u32 & 0xFFFF) << 16) | (pt.x as u32 & 0xFFFF);
-        let hit = SendMessageW(
-            hwnd,
-            WM_NCHITTEST,
-            Some(WPARAM(0)),
-            Some(LPARAM(lparam_val as isize)),
-        );
-        let code = hit.0 as i32;
-        code == HTVSCROLL as i32 || code == HTHSCROLL as i32
-    }
-}
-
-fn is_splitter_drag_by_cursor() -> bool {
+/// 判断当前光标是否为文本选择光标 (I-Beam)
+/// 
+/// 原理解析：
+/// Windows 系统中，当鼠标悬停在可进行文本选择的区域（如输入框、文档内容区）时，
+/// 光标形状通常会自动切换为 `IDC_IBEAM` (工字型光标)。
+/// 通过检测鼠标按下时的光标形状，我们可以精确区分用户的操作意图：
+/// - 如果是 `IDC_IBEAM`，则极大概率是进行文本选择操作。
+/// - 如果是 `IDC_ARROW` (箭头)、`IDC_SIZE` (调整大小)、`IDC_HAND` (链接) 等其他光标，
+///   则通常意味着点击按钮、拖动窗口、调整边框等非文本选择操作。
+/// 
+/// 这种基于光标形状的“白名单”过滤策略，比传统的“黑名单”排除法（排除标题栏、滚动条等）
+/// 更加精准和健壮，能够有效避免在窗口空白区域、工具栏等无关区域拖动时误触发文字检测。
+fn is_text_select_cursor() -> bool {
     unsafe {
         let mut info = CURSORINFO {
             cbSize: std::mem::size_of::<CURSORINFO>() as u32,
@@ -166,63 +115,16 @@ fn is_splitter_drag_by_cursor() -> bool {
         };
         if GetCursorInfo(&mut info).is_ok() {
             let hcursor = info.hCursor.0;
-            let size_ns = LoadCursorW(None, IDC_SIZENS)
+            // 获取系统标准的 I-Beam 光标句柄
+            let ibeam = LoadCursorW(None, IDC_IBEAM)
                 .map(|c| c.0)
                 .unwrap_or_default();
-            let size_we = LoadCursorW(None, IDC_SIZEWE)
-                .map(|c| c.0)
-                .unwrap_or_default();
-            let size_nwse = LoadCursorW(None, IDC_SIZENWSE)
-                .map(|c| c.0)
-                .unwrap_or_default();
-            let size_nesw = LoadCursorW(None, IDC_SIZENESW)
-                .map(|c| c.0)
-                .unwrap_or_default();
-            hcursor == size_ns || hcursor == size_we || hcursor == size_nwse || hcursor == size_nesw
+            // 只有当前光标是 I-Beam 时，才认为是有效的文本选择意图
+            hcursor == ibeam
         } else {
+            // 获取光标信息失败，保守处理，视为非文本选择
             false
         }
-    }
-}
-
-fn get_window_text(hwnd: HWND) -> String {
-    let len = unsafe { GetWindowTextLengthW(hwnd) };
-    if len <= 0 {
-        return String::new();
-    }
-    let mut buf = vec![0u16; (len as usize) + 1];
-    let written = unsafe { GetWindowTextW(hwnd, &mut buf) } as usize;
-    String::from_utf16_lossy(&buf[..written])
-}
-
-fn is_cherry_window(hwnd: HWND) -> bool {
-    let title = get_window_text(hwnd);
-    title.to_lowercase().contains("cherry")
-}
-
-fn is_client_top_drag_region(pt: POINT) -> bool {
-    unsafe {
-        let hwnd = WindowFromPoint(pt);
-        if hwnd.0.is_null() {
-            return false;
-        }
-        let root = GetAncestor(hwnd, GA_ROOT);
-        let target = if root.0.is_null() { hwnd } else { root };
-        let mut rect = RECT::default();
-        if GetWindowRect(target, &mut rect).is_err() {
-            return false;
-        }
-        let caption = GetSystemMetrics(SM_CYCAPTION);
-        let frame = GetSystemMetrics(SM_CYFRAME);
-        let padded = GetSystemMetrics(SM_CXPADDEDBORDER);
-        let mut top_limit = rect.top + caption + frame + padded;
-        if is_cherry_window(target) {
-            let cherry_limit = rect.top + CHERRY_WND_TOP_HEIGHT;
-            if cherry_limit > top_limit {
-                top_limit = cherry_limit;
-            }
-        }
-        pt.y >= rect.top && pt.y <= top_limit
     }
 }
 
@@ -239,16 +141,25 @@ pub unsafe extern "system" fn mouse_hook_proc(
             WM_LBUTTONDOWN => {
                 // 记录按下起点与时间
                 let hook_struct = unsafe { &*(lparam.0 as *const MSLLHOOKSTRUCT) };
-                if is_title_bar_hit(hook_struct.pt)
-                    || is_client_top_drag_region(hook_struct.pt)
-                    || is_resize_border_hit(hook_struct.pt)
-                    || is_scrollbar_hit(hook_struct.pt)
-                    || is_splitter_drag_by_cursor()
-                {
+                
+                // 采用精确的光标形态过滤策略：
+                // 仅当光标呈现为 I-Beam (文本选择样式) 时，才记录鼠标按下事件并后续触发选区检测。
+                // 这样可以完美过滤掉：
+                // 1. 窗口标题栏拖动 (Arrow 光标)
+                // 2. 滚动条拖动 (Arrow 光标)
+                // 3. 窗口边框调整 (Size 光标)
+                // 4. 分割线调整 (Size 光标)
+                // 5. 窗口内空白区域、按钮、图片等非文本区域的拖动 (Arrow/Hand 光标)
+                // 
+                // 之前的逻辑是枚举所有“非客户区”进行排除 (is_title_bar_hit || is_scrollbar_hit ...)，
+                // 这种“黑名单”方式难以覆盖所有无关区域（如窗口内的空白面板），导致误触发。
+                // 现在改为“白名单”方式，只认准 I-Beam 光标，逻辑更收敛、更准确。
+                if !is_text_select_cursor() {
                     NONCLIENT_MOUSE_DOWN.store(1, Ordering::SeqCst);
                     MOUSE_DOWN_TIME.store(0, Ordering::SeqCst);
                     return unsafe { CallNextHookEx(None, code, wparam, lparam) };
                 }
+                
                 let x = hook_struct.pt.x;
                 let y = hook_struct.pt.y;
                 let now = SystemTime::now()
