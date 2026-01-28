@@ -1,4 +1,4 @@
-use windows::Win32::Foundation::{HWND, LPARAM, POINT, WPARAM};
+use windows::Win32::Foundation::{HWND, LPARAM, POINT, RECT, WPARAM};
 use windows::Win32::Graphics::Gdi::ClientToScreen;
 use windows::Win32::System::Com::{CLSCTX_INPROC_SERVER, CoCreateInstance, SAFEARRAY};
 use windows::Win32::System::Ole::{
@@ -10,7 +10,7 @@ use windows::Win32::UI::Accessibility::{
 use windows::Win32::UI::Controls::{EM_GETSEL, EM_POSFROMCHAR};
 use windows::Win32::UI::WindowsAndMessaging::{
     GUITHREADINFO, GetClassNameW, GetForegroundWindow, GetGUIThreadInfo, GetWindowThreadProcessId,
-    SendMessageW,
+    SendMessageW, GetClientRect,
 };
 use windows::core::{Interface, Result};
 
@@ -19,30 +19,114 @@ use crate::{report_error_log, report_info_log};
 
 type FocusedSelection = (Option<String>, Option<(i32, i32)>);
 
-unsafe fn extract_top_left_from_rects(rects: *mut SAFEARRAY) -> Result<Option<(i32, i32)>> {
-    // 从矩形数组中取首个矩形的左上角
+/// 从矩形数组中提取最佳的左上角坐标
+/// 
+/// @param rects: UIA 返回的 SafeArray，包含一组 double 类型的矩形数据 [l, t, w, h, ...]
+/// @param container_rect: 控件本身的屏幕坐标边界，用于裁剪和过滤
+unsafe fn extract_top_left_from_rects(
+    rects: *mut SAFEARRAY,
+    container_rect: Option<RECT>,
+) -> Result<Option<(i32, i32)>> {
     if rects.is_null() {
         return Ok(None);
     }
+    
+    // 获取数组上下界
     let lbound = unsafe { SafeArrayGetLBound(rects, 1)? };
     let ubound = unsafe { SafeArrayGetUBound(rects, 1)? };
     if ubound < lbound {
         return Ok(None);
     }
-    let len = (ubound - lbound + 1) as usize;
-    if len < 4 {
+    
+    // 每一个矩形由 4 个 double 组成: Left, Top, Width, Height
+    let total_len = (ubound - lbound + 1) as usize;
+    if total_len < 4 {
         return Ok(None);
     }
+
     let mut data_ptr: *mut std::ffi::c_void = std::ptr::null_mut();
     unsafe { SafeArrayAccessData(rects, &mut data_ptr)? };
+    
     if data_ptr.is_null() {
         let _ = unsafe { SafeArrayUnaccessData(rects) };
         return Ok(None);
     }
-    let slice: &[f64] = unsafe { std::slice::from_raw_parts(data_ptr as *const f64, len) };
-    let (left, top) = (slice[0], slice[1]);
+
+    // 将裸指针转换为 slice 方便遍历
+    let slice: &[f64] = unsafe { std::slice::from_raw_parts(data_ptr as *const f64, total_len) };
+    
+    let mut best_pos: Option<(i32, i32)> = None;
+
+    // 遍历所有矩形 (步长为 4)
+    // 逻辑：找到第一个与 Container 有交集（即可视）的矩形
+    for chunk in slice.chunks(4) {
+        if chunk.len() < 4 {
+            break;
+        }
+        let r_left = chunk[0];
+        let r_top = chunk[1];
+        let r_width = chunk[2];
+        let r_height = chunk[3];
+        
+        // 转换 text rect 为整数逻辑方便比较
+        let r_right = r_left + r_width;
+        let r_bottom = r_top + r_height;
+
+        if let Some(c_rect) = container_rect {
+            // Container 坐标
+            let c_left = c_rect.left as f64;
+            let c_top = c_rect.top as f64;
+            let c_right = c_rect.right as f64;
+            let c_bottom = c_rect.bottom as f64;
+
+            // 1. 检查是否完全在可视区域上方或左方 (Scrolled out)
+            if r_bottom < c_top || r_right < c_left {
+                // 这个矩形已经被卷出去了，跳过，找下一行
+                continue;
+            }
+
+            // 2. 检查是否完全在可视区域下方或右方
+            if r_top > c_bottom || r_left > c_right {
+                // 这个矩形还没出现或者已经超出范围，如果是顺序排列的文本，后面的一般也不会匹配了
+                // 但为了保险，我们可以继续或者直接 break。这里选择 continue 以防万一。
+                continue;
+            }
+
+            // 3. 找到了可视（或部分可视）的矩形
+            // 执行 Clamping (钳制)，确保返回的坐标不会超出容器边界（变成负数或不可见）
+            let final_x = r_left.max(c_left);
+            let final_y = r_top.max(c_top);
+
+            best_pos = Some((final_x.round() as i32, final_y.round() as i32));
+            break; // 找到第一个可视的即可退出
+        } else {
+            report_info_log!("无法获取 Container 边界，回退到原始逻辑");
+            // 如果无法获取 Container 边界，则回退到原来的逻辑：直接取第一个
+            best_pos = Some((r_left.round() as i32, r_top.round() as i32));
+            break;
+        }
+    }
+
+    // 如果遍历完都没找到可视的（比如全选了但都不在视野内），
+    // 理论上最好返回 None 让外部回退到鼠标位置，或者返回第一个计算出的坐标。
+    // 这里如果 best_pos 还是 None，说明所有 rect 都被剔除了。
+    // 作为一个兜底，如果原本有数据但都被剔除了，我们尝试取第一个数据的 Clamped 版本（如果容器存在），
+    // 或者直接取第一个原始数据。
+    if best_pos.is_none() && total_len >= 4 {
+        let r_left = slice[0];
+        let r_top = slice[1];
+        if let Some(c_rect) = container_rect {
+             // 强行钳制第一个
+             let final_x = r_left.max(c_rect.left as f64);
+             let final_y = r_top.max(c_rect.top as f64);
+             best_pos = Some((final_x.round() as i32, final_y.round() as i32));
+        } else {
+             best_pos = Some((r_left.round() as i32, r_top.round() as i32));
+        }
+    }
+
     let _ = unsafe { SafeArrayUnaccessData(rects) };
-    Ok(Some((left.round() as i32, top.round() as i32)))
+    Ok(best_pos)
 }
 
 fn get_focused_selection() -> Result<FocusedSelection> {
@@ -50,6 +134,11 @@ fn get_focused_selection() -> Result<FocusedSelection> {
     unsafe {
         let uia: IUIAutomation = CoCreateInstance(&CUIAutomation, None, CLSCTX_INPROC_SERVER)?;
         let focused_element = uia.GetFocusedElement()?;
+
+        // [新增] 获取当前控件的可视矩形边界 (Screen Coordinates)
+        // 这对于过滤滚动导致的负坐标至关重要
+        let container_rect = focused_element.CurrentBoundingRectangle().ok();
+        report_info_log!("Container 边界: {:?}", container_rect);
 
         let pattern_obj = focused_element.GetCurrentPattern(UIA_TextPatternId)?;
         let text_pattern: IUIAutomationTextPattern = match pattern_obj.cast() {
@@ -73,7 +162,7 @@ fn get_focused_selection() -> Result<FocusedSelection> {
             if top_left.is_none() {
                 // 读取选中文字高亮矩形，优先取第一个矩形
                 if let Ok(rects) = range.GetBoundingRectangles() {
-                    top_left = extract_top_left_from_rects(rects).unwrap_or(None);
+                    top_left = extract_top_left_from_rects(rects, container_rect).unwrap_or(None);
                 }
             }
         }
@@ -134,6 +223,17 @@ fn pos_from_edit(hwnd: HWND) -> Option<(i32, i32)> {
             x: (pos_val & 0xFFFF) as i16 as i32,
             y: ((pos_val >> 16) & 0xFFFF) as i16 as i32,
         };
+
+        // [关键步骤] 获取控件可视区域并进行坐标钳制(Clamping)
+        let mut client_rect = RECT::default();
+        if GetClientRect(hwnd, &mut client_rect).is_ok() {
+            // client_rect.left/top 永远是 0
+            // 如果坐标小于 0 (卷出去了)，强行吸附到 0
+            // 如果坐标大于宽高 (还没显示)，强行吸附到边缘
+            pt.x = pt.x.clamp(client_rect.left, client_rect.right);
+            pt.y = pt.y.clamp(client_rect.top, client_rect.bottom);
+        }
+
         if ClientToScreen(hwnd, &mut pt).as_bool() {
             report_info_log!("Edit坐标: {:?}", pt);
             return Some((pt.x, pt.y));
@@ -169,6 +269,14 @@ fn pos_from_scintilla(hwnd: HWND) -> Option<(i32, i32)> {
         )
         .0 as i32;
         let mut pt = POINT { x, y };
+
+        // [关键步骤] 坐标钳制
+        let mut client_rect = RECT::default();
+        if GetClientRect(hwnd, &mut client_rect).is_ok() {
+            pt.x = pt.x.clamp(client_rect.left, client_rect.right);
+            pt.y = pt.y.clamp(client_rect.top, client_rect.bottom);
+        }
+
         if ClientToScreen(hwnd, &mut pt).as_bool() {
             report_info_log!("Scintilla坐标: {:?}", pt);
             return Some((pt.x, pt.y));
